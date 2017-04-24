@@ -1,0 +1,125 @@
+---
+title: "DEMO_test"
+author: "M. Vaz"
+date: "April 22, 2017"
+output: html_document
+---
+
+```{r, message=FALSE, warning=FALSE, include=FALSE}
+
+# Loading and preparing data
+
+sites = read.csv("sites.csv",header=T,as.is=T)
+head(sites)
+
+cens = read.csv("censuses.csv",header=T,as.is=T)
+head(cens)
+
+gg = read.csv("growth.csv",header=T,as.is=T)
+head(gg)  
+str(gg)
+
+mm = read.csv("mort.csv",header=T,as.is=T)
+head(mm)
+str(mm)
+
+# species (full) names
+gg$sp = paste(gg$genus,gg$species)
+mm$sp = paste(mm$genus,mm$species)
+
+# merging mortality and growth tables
+dd = merge(gg,mm,all=T)
+
+```
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height=10}
+library(smatr)
+source("asters.R")
+
+for(i in cens$code){
+#cens$sqR = cens$slope = cens$mGr = cens$mMort = NA
+
+# Demographic rates for each site-census
+g10 = subset(dd,code==i)$f10g # sapling growth rate
+m10 = subset(dd,code==i)$f10m # sapling mortality
+g100 = subset(dd,code==i)$f100g # adult growth
+m100 = subset(dd,code==i)$f100m # adult mortality
+
+## Standardized major axis regression
+# Saplings
+mod10 = sma(m10~g10,log="xy")
+r10 = mod10$r2[[1]]
+p10 = mod10$pval[[1]]
+p10 = asters(p10)
+# Adults
+mod100 = sma(m100~g100,log="xy")
+r100 = mod100$r2[[1]]
+p100 = mod100$pval[[1]]
+p100 = asters(p100)
+
+### Graphics
+par(mfrow=c(3,2))
+# Titles
+gt = paste(c(subset(cens,code==i,select=c("site","t0","t1"))),collapse="-")
+gt10 = paste(c(subset(cens,code==i,select=c("site","t0","t1")),"saplings"),collapse="-")
+gt100 = paste(c(subset(cens,code==i,select=c("site","t0","t1")),"adults"),collapse="-")
+
+## Rate distribution
+# Growth
+plot(density(g10,na.rm=T,adjust=4),col=2,main=gt,xlab="Estimated growth rate (%)")
+lines(density(g100,na.rm=T,adjust=4),col=4)
+legend(x="topright",lty=1,legend=c("saplings","adults"),col=c(2,4),bty="n")
+# Mortality
+plot(density(m10,na.rm=T,adjust=4),col=2,main=gt,xlab="Estimated mortality rate (%)")
+lines(density(m100,na.rm=T,adjust=4),col=4)
+legend(x="topright",lty=1,legend=c("saplings","adults"),col=c(2,4),bty="n")
+
+## Growth-mortality trade-off
+# Saplings
+plot(m10~g10,xlab="Growth rate (%)",ylab="Mortality rate (%)",main=gt10,log="xy")
+abline(mod10,col=2)
+legend(x="bottomright",legend=paste("R2=",round(r10,2),p10,sep=""),bty="n")
+# Adults
+plot(m100~g100,xlab="Growth rate (%)",ylab="Mortality rate (%)",main=gt100,log="xy")
+abline(mod100,col=2)
+legend(x="bottomright",legend=paste("R2=",round(r100,2),p100,sep=""),bty="n")
+
+## Residuals vs. relative abundance
+# Relative abundances
+a10 = subset(dd,code==i)$n10m*100/sum(subset(dd,code==i)$n10m,na.rm=T)
+a10 = a10[as.numeric(row.names(mod10$data))]
+a100 = subset(dd,code==i)$n100m*100/sum(subset(dd,code==i)$n100m,na.rm=T)
+a100 = a100[as.numeric(row.names(mod100$data))]
+
+# Regressions
+mod10b = lm(log(a10)~residuals(mod10))
+r10b = summary(mod10b)$adj.r.squared
+p10b = summary(mod10b)$coefficients[2,4]
+p10b = asters(p10b)  
+mod100b = lm(log(a100)~residuals(mod100))
+r100b = summary(mod100b)$adj.r.squared
+p100b = summary(mod100b)$coefficients[2,4]
+p100b = asters(p100b) 
+# include a10~residuals(mod100) -> expect species that escape the g-m trade-off to have lower recruitment (therefore lower n10)
+
+## Graphics
+# Saplings
+plot(log(a10)~residuals(mod10),xlab="SMA residuals",ylab="log(Relative abundance (%))",main=gt10)
+abline(mod10b,col=2)
+legend(x="bottomright",legend=paste("R2=",round(r10b,2),p10b,sep=""),bty="n")
+# Adults
+plot(log(a100)~residuals(mod100),xlab="SMA residuals",ylab="log(Relative abundance (%))",main=gt100)
+abline(mod100b,col=2)
+legend(x="bottomright",legend=paste("R2=",round(r100b,2),p100b,sep=""),bty="n")
+
+}
+```
+
+
+
+
+
+
+
+
