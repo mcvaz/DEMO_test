@@ -1,0 +1,21 @@
+{
+    "collab_server" : "",
+    "contents" : "source(\"asters.R\")\ngraphSites = function(x,y,type=\"OLS\",log=\"\",legat=\"topleft\",jag=1.05,labX=\"\",labY=\"\",title=\"\"){\n  if(log==\"\"){logX = function(x){x};logY = function(x){x}}\n  if(log==\"xy\"){logX = function(x){log(x)};logY = function(x){log(x)}}\n  if(log==\"x\"){logX = function(x){log(x)};logY = function(x){x}}\n  if(log==\"y\"){logX = function(x){x};logY = function(x){log(x)}}\n  if(type==\"OLS\"){\n    mod = lm(logY(y)~logX(x))\n    plot(logY(y)~logX(x),xlab=labX,ylab=labY,pch=16,main=title)\n    r2 = round(summary(mod)$adj.r.squared,2)\n    pp = asters(summary(mod)$coefficients[2,4])\n    if(pp!=\"\"){\n      abline(mod,col=2,lwd=2)\n      legend(x=legat,legend=paste(\"R^2 =\",r2,pp),bty=\"n\",text.col=2)\n      }\n    text(x=jag*logX(x),y=jag*logY(y),site,cex=.7)\n  }else{\n    mod = sma(y~x,log=log)\n    plot(y~x,log=log,xlab=labX,ylab=labY,pch=16,main=title)\n    r2 = round(mod$r2[[1]],2)\n    pp = asters(mod$pval[[1]])\n    if(pp!=\"\"){\n      abline(mod,col=2,lwd=2)\n      legend(x=legat,legend=paste(\"R^2 =\",r2,pp),bty=\"n\",text.col=2)\n      }\n    text(x=jag*x,y=jag*y,site,cex=.7)  \n    }\n  }",
+    "created" : 1493760317130.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "1956846422",
+    "id" : "372B15CA",
+    "lastKnownWriteTime" : 1493760375,
+    "last_content_update" : 1493760375473,
+    "path" : "~/GitHub/DEMO_test/graphSites.R",
+    "project_path" : "graphSites.R",
+    "properties" : {
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

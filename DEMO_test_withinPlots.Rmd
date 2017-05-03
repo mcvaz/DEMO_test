@@ -1,5 +1,5 @@
 ---
-title: "DEMO_test"
+title: "Within plots"
 author: "M. Vaz"
 date: "April 22, 2017"
 output: html_document
@@ -32,31 +32,49 @@ dd = merge(gg,mm,all=T)
 
 ```
 
-
+# Interspecific growth-mortality trade-off
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height=10}
 library(smatr)
 source("asters.R")
 
-for(i in cens$code){
-#cens$sqR = cens$slope = cens$mGr = cens$mMort = NA
+cens$p10 = cens$sr10 = cens$slL10 = cens$slU10 = cens$sl10 = cens$intL10 = cens$intU10 = cens$int10 = cens$mm10 = cens$mg10 = NA
+cens$p100 = cens$sr100 = cens$slL100 = cens$slU100 = cens$sl100 = cens$intL100 = cens$intU100 = cens$int100 = cens$mm100 = cens$mg100 = NA
 
-# Demographic rates for each site-census
+for(i in cens$code){
+
+## Demographic rates for each site-census
 g10 = subset(dd,code==i)$f10g # sapling growth rate
 m10 = subset(dd,code==i)$f10m # sapling mortality
 g100 = subset(dd,code==i)$f100g # adult growth
 m100 = subset(dd,code==i)$f100m # adult mortality
+# save median values
+cens[cens$code==i,c("mm10","mg10","mm100","mg100")] = c(median(m10,na.rm=T),median(g10,na.rm=T),median(m100,na.rm=T),median(g100,na.rm=T))
 
 ## Standardized major axis regression
 # Saplings
 mod10 = sma(m10~g10,log="xy")
+i10 = mod10$coef[[1]][1,1]
+iU10 = mod10$coef[[1]][1,3]
+iL10 = mod10$coef[[1]][1,2]
+s10 = mod10$coef[[1]][2,1]
+sU10 = mod10$coef[[1]][2,3]
+sL10 = mod10$coef[[1]][2,2]
 r10 = mod10$r2[[1]]
-p10 = mod10$pval[[1]]
-p10 = asters(p10)
+p10a = mod10$pval[[1]]
+p10 = asters(p10a)
 # Adults
 mod100 = sma(m100~g100,log="xy")
+i100 = mod100$coef[[1]][1,1]
+iU100 = mod100$coef[[1]][1,3]
+iL100 = mod100$coef[[1]][1,2]
+s100 = mod100$coef[[1]][2,1]
+sU100 = mod100$coef[[1]][2,3]
+sL100 = mod100$coef[[1]][2,2]
 r100 = mod100$r2[[1]]
-p100 = mod100$pval[[1]]
-p100 = asters(p100)
+p100a = mod100$pval[[1]]
+p100 = asters(p100a)
+# Save values
+cens[cens$code==i,c("int10","intU10","intL10","sl10","slU10","slL10","sr10","p10","int100","intU100","intL100","sl100","slU100","slL100","sr100","p100")] = c(i10,iU10,iL10,s10,sU10,sL10,r10,p10a,i100,iU100,iL100,s100,sU100,sL100,r100,p100a)
 
 ### Graphics
 par(mfrow=c(3,2))
@@ -114,11 +132,12 @@ abline(mod100b,col=2)
 legend(x="bottomright",legend=paste("R2=",round(r100b,2),p100b,sep=""),bty="n")
 
 }
+
+par(mfrow=c(1,1))
+
+write.csv(cens,"censuses2.csv")
+
 ```
-
-
-
-
 
 
 
